@@ -1,137 +1,57 @@
+
 Weekend Home Agent (WHA)
 
-A next-generation, context-aware smart home microservice designed to proactively manage your home environment, media handoffs, and weekend agenda based on physical presence, biometric data, emotional context, and work stress.
+A next-generation, context-aware smart home microservice designed to proactively manage the user's home environment, media handoffs, and weekend agenda based on physical presence (RTLS), biometric data, emotional context, and work stress.
 
+🚀 Core Architectural Imperatives
 
----
-
-🚀 Features
+The WHA is built on three advanced principles, ensuring it remains both autonomous and secure:
+Privacy-Preserving Federated Learning (PPFL): To fulfill the mandate of continuous learning without compromising sensitive data (location, biometrics, finances), all machine learning models must be trained locally on the user's Edge device. Only model weights are transferred, ensuring raw user data never leaves the home network.[1]
+Hierarchical Planning & Grounded Execution: To manage the complexity of a multi-day weekend agenda, the LLM utilizes a Hierarchical Planning architecture (inspired by SAGE/HiPlan [2, 3]). This ensures the Agent maintains "macroscopic guidance" (the overall weekend goal) while adapting to real-time changes using dynamic, step-wise prompts (Grounded Execution).[2, 4]
+Adaptive Reasoning: The Agent employs Utility-Based Reasoning to weigh complex outcomes (e.g., recovery vs. commitment) and utilizes Zero-Shot Generalization to handle novel requests never explicitly programmed for.[5, 6]
 
 1. Real-Time Location System (RTLS) & Handoff
 
-Proximity Tracking: BLE RSSI data from watch and phone to determine room location.
+Proximity Tracking: Uses Bluetooth Low Energy (BLE) RSSI data, requiring an upgrade to Ultra-Wideband (UWB) and Sensor Data Fusion (e.g., UWB + IMU) to overcome indoor signal fluctuation issues and ensure robust, high-precision tracking.[7, 8]
+Location-Based Suggestions: When the user is outside the home, the Agent uses the Gemini API (with Google Search grounding) to provide relevant suggestions for Food and Shopping near the detected location.
 
-Seamless Handoff: Transfers media streams to current room devices via MQTT.
+2. Contextual Task Generation (The Intelligence Core)
 
-Contextual Lighting: Adjusts brightness and color temperature based on time and ambient light.
+Stress & Capacity Filtering: Prioritizes the agenda by dynamically factoring in Biometrics, Work Metrics, and Financial Health.
+Digital Well-being: Tracks phone usage (YouTube, texting) to calculate a Health Score and Productivity Score, triggering Digital Detox interventions when necessary.
 
-Location-Based Suggestions: Recommends nearby food and shopping using Gemini API and Google Search grounding.
+🏗️ Deployment & Technology Stack
 
+Component
+Technology
+Role
+Security/Compliance Note
+Agent Intelligence Core
+Python (Gemini API)
+Runs all Task, Mood, Biometric, and Work Stress logic.
+Must adhere to Zero Trust security protocol.[9]
+Data Backbone
+Mosquitto MQTT Broker
+Central hub for all real-time data (RTLS, Commands, Alerts).
+Data should be encrypted before transmission off the Edge device.
+Home Automation
+Home Assistant (YAML)
+Subscribes to MQTT commands to execute secure device control.
+Biometrics integration (like facial or voice recognition) can enhance security for access control.[10, 11]
 
-2. Contextual Task Generation (Intelligence Core)
 
-Conversation Harvest: Extracts commitments, needs, and emotional state from weekly messages.
+📝 Project Reference Notes
 
-Stress & Capacity Filtering: Prioritizes tasks based on sleep, readiness, and work load.
+This project is grounded in established architectural patterns from advanced AI systems:
+Personalized Data Aggregation (Verily Me): The challenge of securely integrating diverse, longitudinal data (health, schedule, activity) is modeled on systems that connect health and wellness data via standardized frameworks (Apple HealthKit/Google Health Connect).[12]
+Privacy-Preserving Learning (FedHome/PPFL): The fundamental ethical constraint of this project—learning user behavior without centralizing sensitive data—is solved by implementing a Cloud-Edge architecture that uses Federated Learning. The raw data remains local to the user's Edge device, and only model weights are shared for global training.[1]
+Probabilistic Planning (PExA/Cal.ai): The Agent’s ability to maximize user utility over efficiency, especially during spontaneous weekend activities, is inspired by intelligent assistants that employ probabilistic reasoning to weigh the complex risks and rewards of different scheduling choices.[13, 14]
+LLM Control Flow (SAGE/HiPlan): The Agent's long-horizon planning for the entire weekend is managed by a Hierarchical Planning approach to prevent LLM "disorientation" and ensure actions remain grounded in real-time environmental context.[2, 3, 4]
 
-Proactive Planning: Integrates sensor data and social commitments into a consolidated to-do list.
 
 
-3. International Awareness
 
-Workday Closure Alerts: Monitors European workdays to manage final communications.
 
-Targeted Alerts: Notifies the dashboard when workdays end in monitored zones.
 
 
 
----
-
-🏗️ Architecture & Deployment Stack
-
-Component	Technology	Role	Deployment
-
-Agent Intelligence Core	Python (Gemini API)	Task, Mood, Biometric, and Work Stress logic	Google Cloud Run
-RTLS Decision Engine	Python (Paho-MQTT)	Processes RSSI and publishes handoff commands	Always-on service
-Data Backbone	Mosquitto MQTT Broker	Central hub for all real-time data	Docker Container
-Frontend/Dashboard	React (Tailwind CSS)	Displays location, tasks, alerts	Vercel / GitHub Pages
-Home Automation	Home Assistant	Subscribes to MQTT commands for device control	Existing HA Instance
-
-
-
----
-
-📂 Project Structure & Key Files
-
-Filepath	Component	Description
-
-deployment_guide.md	Documentation	Step-by-step installation, testing, deployment
-docker-compose.yml	MQTT Broker Setup	Spins up Mosquitto broker
-mqtt_rtls_publisher.py	Decision Engine	Determines location, publishes handoff command, fetches suggestions
-agent_service_tasks.py	Intelligence Core	Contextual, mood-based task list logic
-AgentDashboard.jsx	Frontend	Real-time dashboard display
-home_assistant_scripts.yaml	HA Lighting Logic	Dynamic light adjustments
-home_assistant_automation.yaml	HA Master Automation	Subscribes to MQTT command topic and executes actions
-
-
-
----
-
-⚙️ Getting Started
-
-1. Clone the repo:
-
-
-
-git clone https://github.com/yourusername/wha.git
-cd wha
-
-2. Start MQTT Broker:
-
-
-
-docker-compose up -d
-
-3. Run RTLS Engine:
-
-
-
-python mqtt_rtls_publisher.py
-
-4. Start Intelligence Core:
-
-
-
-python agent_service_tasks.py
-
-5. Launch Dashboard:
-
-
-
-npm install && npm start
-
-6. Home Assistant Setup:
-
-
-
-Load home_assistant_scripts.yaml and home_assistant_automation.yaml
-
-Verify MQTT topic subscription and device triggers
-
-
-
----
-
-📈 Roadmap
-
-Stage 1 (MVP): Core automation, RTLS handoff, basic dashboard
-
-Stage 2 (Smart Context): Predictive routines, emotional awareness, capacity index
-
-Stage 3 (Adaptive Intelligence): Local LLM cache, context narration, privacy compliance, voice UX
-
-
-
----
-
-📖 References
-
-Rey-Jouanchicot et al., 2024: LLMs for personalized smart homes
-
-Cheng et al., 2024: AutoIoT automated IoT platform
-
-Heierman & Cook, 2003: Pattern discovery in smart homes
-
-MDPI, 2014: Multi-agent sensor-actuator networks
-
-FakhrHosseini et al., 2024: Taxonomy of smart home systems
