@@ -1,4 +1,4 @@
-# Weekend Agent
+# Weekend Agent 🚦
 
 Smart local logistics and mobility recommendations powered by intelligent decision-making algorithms.
 
@@ -8,32 +8,32 @@ Weekend Agent is an AI-powered mobility assistant that helps you make smart deci
 
 ## Features
 
-### Intelligent Mobility Recommendations
+### 🎯 Intelligent Mobility Recommendations
 - **Walk, Drive, or Rideshare** suggestions based on multiple factors
 - Real-time confidence scoring for each recommendation
 - Detailed reasoning for every decision
 
-### Weather-Aware Logic
+### 🌦️ Weather-Aware Logic
 - Temperature thresholds (configurable)
 - Rain probability analysis
 - Automatic adjustments for extreme weather conditions
 
-### Parking Intelligence
+### 🚗 Parking Intelligence
 - Destination-specific parking difficulty ratings
 - Parking garage availability tracking
 - Cost estimates for parking fees
 
-### Event Impact Analysis
+### 🎉 Event Impact Analysis
 - Track local events and festivals
 - Automatic detection of nearby large gatherings (>5,000 attendees)
 - Event-based parking and mobility recommendations
 
-### Home Status Integration
+### 🏠 Home Status Integration
 - EV charge level monitoring
 - Garden watering status tracking
 - Smart suggestions based on home maintenance needs
 
-### Friday Recap (Conversation Notes)
+### 📝 Friday Recap (Conversation Notes)
 - Log weekly conversations and commitments
 - Extract venue mentions and social plans
 - Emotional state tracking for better recommendations
@@ -76,7 +76,7 @@ Each recommendation includes:
 
 ---
 
-## Deployment Options
+## 🚀 Deployment Options
 
 ### Option 1: Cloudflare Workers (Current)
 
@@ -95,11 +95,11 @@ npx wrangler deploy
 
 ### Option 2: Vercel Deployment
 
-See [Vercel Deployment Guide](#vercel-deployment) below.
+See [Vercel Deployment Guide](#-vercel-deployment) below.
 
 ---
 
-## Vercel Deployment
+## ☁️ Vercel Deployment
 
 ### Architecture Comparison
 
@@ -236,9 +236,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!settings) {
       await db.execute({
-        sql: `INSERT INTO user_settings
-              (max_comfortable_walk_distance, temperature_drive_threshold_high,
-               temperature_drive_threshold_low, rain_drive_threshold)
+        sql: `INSERT INTO user_settings 
+              (max_comfortable_walk_distance, temperature_drive_threshold_high, 
+               temperature_drive_threshold_low, rain_drive_threshold) 
               VALUES (?, ?, ?, ?)`,
         args: [1.5, 30, 5, 40],
       });
@@ -251,8 +251,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Get events
     const now = new Date().toISOString();
     const eventsResult = await db.execute({
-      sql: `SELECT * FROM events
-            WHERE start_datetime >= ? OR end_datetime >= ?
+      sql: `SELECT * FROM events 
+            WHERE start_datetime >= ? OR end_datetime >= ? 
             ORDER BY start_datetime`,
       args: [now, now],
     });
@@ -272,7 +272,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Calculate distance
     let distance = 0;
-    if (settings?.home_latitude && settings?.home_longitude &&
+    if (settings?.home_latitude && settings?.home_longitude && 
         destination.latitude && destination.longitude) {
       const R = 3958.8;
       const dLat = (Number(destination.latitude) - Number(settings.home_latitude)) * (Math.PI / 180);
@@ -296,8 +296,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Get conversation notes for Friday recap
     const notesResult = await db.execute(
-      `SELECT * FROM conversation_notes
-       WHERE date_logged >= date('now', '-7 days')
+      `SELECT * FROM conversation_notes 
+       WHERE date_logged >= date('now', '-7 days') 
        ORDER BY date_logged DESC LIMIT 5`
     );
 
@@ -319,10 +319,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Store recommendation
     await db.execute({
-      sql: `INSERT INTO mobility_recommendations
-            (destination_id, recommendation, confidence_score, reasoning,
-             weather_temp, weather_condition, rain_probability,
-             parking_difficulty, estimated_cost)
+      sql: `INSERT INTO mobility_recommendations 
+            (destination_id, recommendation, confidence_score, reasoning, 
+             weather_temp, weather_condition, rain_probability, 
+             parking_difficulty, estimated_cost) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         destination_id,
@@ -366,9 +366,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const data = req.body;
       const result = await db.execute({
-        sql: `INSERT INTO destinations
-              (name, address, latitude, longitude, typical_parking_difficulty,
-               has_parking_garage, parking_cost_estimate)
+        sql: `INSERT INTO destinations 
+              (name, address, latitude, longitude, typical_parking_difficulty, 
+               has_parking_garage, parking_cost_estimate) 
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
         args: [
           data.name,
@@ -504,7 +504,7 @@ curl https://your-app.vercel.app/api/destinations
 
 ---
 
-## Project Structure (Vercel)
+## 📁 Project Structure (Vercel)
 
 ```
 weekend-agent/
@@ -535,7 +535,7 @@ weekend-agent/
 
 ---
 
-## Environment Variables
+## 🔧 Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
@@ -544,7 +544,7 @@ weekend-agent/
 
 ---
 
-## Local Development (Vercel)
+## 🧪 Local Development (Vercel)
 
 ```bash
 # Install Vercel CLI
@@ -562,7 +562,7 @@ vercel dev
 
 ---
 
-## Migration Checklist
+## 🔄 Migration Checklist
 
 - [ ] Create Turso database
 - [ ] Run migrations on Turso
@@ -575,7 +575,7 @@ vercel dev
 
 ---
 
-## API Endpoints
+## 📊 API Endpoints
 
 ### Recommendations
 - `POST /api/recommendation` - Generate mobility recommendation
@@ -683,4 +683,4 @@ Weekend Agent uses a sophisticated mobility scoring algorithm that balances mult
 
 ## License
 
-Built with Mocha
+Built with Mocha ☕
