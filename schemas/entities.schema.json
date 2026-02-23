@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HA Entity Inventory",
+  "description": "Schema for the canonical Home Assistant entity registry produced by scripts/snapshot-inventory.ts",
+  "type": "object",
+  "required": ["generated_at", "source", "ha_url", "entities"],
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the snapshot was taken"
+    },
+    "source": {
+      "type": "string",
+      "description": "HA REST endpoint used to produce this snapshot",
+      "example": "GET /api/states"
+    },
+    "ha_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Base URL of the Home Assistant instance (no trailing slash)"
+    },
+    "entities": {
+      "type": "array",
+      "description": "Ordered list of entity records",
+      "items": {
+        "$ref": "#/definitions/EntityRecord"
+      }
+    }
+  },
+  "definitions": {
+    "EntityRecord": {
+      "type": "object",
+      "required": ["entity_id", "friendly_name", "domain"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "pattern": "^[a-z_]+\\.[a-z0-9_]+$",
+          "description": "Canonical HA entity identifier in domain.object format",
+          "examples": ["light.office_lights", "switch.kitchen_fridge_socket"]
+        },
+        "friendly_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable label shown in the HA UI"
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HA domain extracted from entity_id (light, switch, sensor, binary_sensor, etc.)"
+        },
+        "state": {
+          "type": "string",
+          "description": "Last known state string at time of snapshot (on, off, unavailable, etc.)"
+        },
+        "area": {
+          "type": "string",
+          "description": "Logical area name from HA area registry, if available"
+        },
+        "device_id": {
+          "type": "string",
+          "description": "HA device registry ID, if present in entity attributes"
+        },
+        "integration": {
+          "type": "string",
+          "description": "Integration / platform that owns this entity (e.g. zha, mqtt, lifx)"
+        },
+        "platform": {
+          "type": "string",
+          "description": "HA platform string from entity attributes, if present"
+        },
+        "aliases": {
+          "type": "array",
+          "description": "Optional list of alternative human names used by the resolver (Step 2)",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        }
+      }
+    }
+  }
+}
