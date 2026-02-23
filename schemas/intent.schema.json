@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/DJRonG/Weekend-Chat/schemas/intent.schema.json",
+  "title": "Intent",
+  "description": "Contract for a Weekend Agent automation intent. Consumed by the Step 3b YAML generator after resolver validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "kind", "name", "actions"],
+  "properties": {
+    "v": {
+      "description": "Schema version. Must be 1.",
+      "type": "integer",
+      "enum": [1]
+    },
+    "kind": {
+      "description": "Intent kind. Only 'automation' is supported in v1. 'scene' and 'theme' are reserved for future versions.",
+      "type": "string",
+      "enum": ["automation"]
+    },
+    "name": {
+      "description": "Human-readable name for the automation. Non-empty string.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "description": {
+      "description": "Optional longer description of what the automation does.",
+      "type": "string",
+      "maxLength": 1024
+    },
+    "actions": {
+      "description": "Ordered list of service calls. Must contain at least one action.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Action"
+      }
+    },
+    "triggers": {
+      "description": "Optional HA-style trigger definitions. Permissive for forward compatibility.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Trigger"
+      }
+    },
+    "conditions": {
+      "description": "Optional HA-style condition definitions. Permissive for forward compatibility.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Condition"
+      }
+    },
+    "metadata": {
+      "$ref": "#/definitions/Metadata"
+    }
+  },
+  "definitions": {
+    "Action": {
+      "type": "object",
+      "description": "A single HA service call within the automation.",
+      "additionalProperties": false,
+      "required": ["service"],
+      "properties": {
+        "service": {
+          "description": "Home Assistant service to call, in domain.service format (e.g. 'light.turn_on').",
+          "type": "string",
+          "pattern": "^[a-z_]+\\.[a-z_]+$"
+        },
+        "targets": {
+          "description": "Array of human-friendly names. The resolver MUST be called to convert these to entity_ids before YAML generation.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "entity_ids": {
+          "description": "Array of fully-qualified HA entity IDs (e.g. 'light.office_lights'). Use when entity_id is already known. If both targets and entity_ids are present, entity_ids takes precedence.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_]+\\.[a-z0-9_]+$"
+          }
+        },
+        "data": {
+          "description": "Optional service call data payload (e.g. brightness, transition). Passed through to YAML verbatim.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "anyOf": [
+        { "required": ["targets"] },
+        { "required": ["entity_ids"] }
+      ]
+    },
+    "Trigger": {
+      "type": "object",
+      "description": "Home Assistant trigger definition. Permissive — any additional fields allowed for forward compatibility.",
+      "required": ["platform"],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "Condition": {
+      "type": "object",
+      "description": "Home Assistant condition definition. Permissive — any additional fields allowed for forward compatibility.",
+      "required": ["condition"],
+      "properties": {
+        "condition": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "Metadata": {
+      "type": "object",
+      "description": "Optional metadata hints used by the generator and resolver. Not emitted into YAML.",
+      "additionalProperties": false,
+      "properties": {
+        "area_hint": {
+          "description": "Preferred HA area name. Passed as area_hint to resolver.",
+          "type": "string",
+          "minLength": 1
+        },
+        "domain_hint": {
+          "description": "Preferred HA domain. Passed as domain_hint to resolver.",
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ui": {
+          "description": "Identifier of the UI surface that produced this intent (e.g. 'weekend-agent-panel'). Used for audit/tracing only.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
