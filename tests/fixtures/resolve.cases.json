@@ -1,0 +1,119 @@
+[
+  {
+    "id": "exact-01",
+    "description": "Exact case-sensitive match returns confidence 1.00, needs_review false, missing false",
+    "request": { "query": "Office Lights", "min_confidence": 0.8 },
+    "expect": {
+      "missing": false,
+      "needs_review": false,
+      "best_entity_id": "light.office_lights",
+      "best_match_type": "exact",
+      "best_confidence": 1.0
+    }
+  },
+  {
+    "id": "casefold-01",
+    "description": "Case-insensitive match (casefold) returns confidence 0.98, needs_review false",
+    "request": { "query": "office lights", "min_confidence": 0.8 },
+    "expect": {
+      "missing": false,
+      "needs_review": false,
+      "best_entity_id": "light.office_lights",
+      "best_match_type": "casefold",
+      "best_confidence": 0.98
+    }
+  },
+  {
+    "id": "alias-exact-01",
+    "description": "Alias exact match returns confidence 0.95, needs_review false",
+    "request": { "query": "work lights", "min_confidence": 0.8 },
+    "expect": {
+      "missing": false,
+      "needs_review": false,
+      "best_entity_id": "light.office_lights",
+      "best_match_type": "alias_exact",
+      "best_confidence": 0.95
+    }
+  },
+  {
+    "id": "alias-exact-casefold-01",
+    "description": "Alias match is case-insensitive (casefold on alias)",
+    "request": { "query": "WORK LIGHTS", "min_confidence": 0.8 },
+    "expect": {
+      "missing": false,
+      "needs_review": false,
+      "best_entity_id": "light.office_lights",
+      "best_match_type": "alias_exact"
+    }
+  },
+  {
+    "id": "missing-01",
+    "description": "No match at all returns missing=true, best=null, matches empty, needs_review false",
+    "request": { "query": "nonexistent device xyz", "min_confidence": 0.8 },
+    "expect": {
+      "missing": true,
+      "needs_review": false,
+      "best_is_null": true,
+      "matches_empty": true
+    }
+  },
+  {
+    "id": "needs-review-01",
+    "description": "Fuzzy (token_set) match above min_confidence returns needs_review=true",
+    "request": { "query": "ron office lights", "min_confidence": 0.5 },
+    "expect": {
+      "missing": false,
+      "needs_review": true,
+      "best_entity_id": "light.office_lights",
+      "suggested_aliases_non_empty": true,
+      "suggested_aliases_contains": "ron office lights"
+    }
+  },
+  {
+    "id": "suggested-alias-01",
+    "description": "Suggested alias generated for fuzzy match that passed min_confidence",
+    "request": { "query": "ron office lights", "min_confidence": 0.5 },
+    "expect": {
+      "best_entity_id": "light.office_lights",
+      "missing": false,
+      "needs_review": true,
+      "suggested_aliases_non_empty": true,
+      "suggested_aliases_contains": "ron office lights"
+    }
+  },
+  {
+    "id": "suggested-alias-none-when-exact-01",
+    "description": "No alias suggested for exact match",
+    "request": { "query": "Office Lights" },
+    "expect": {
+      "best_entity_id": "light.office_lights",
+      "suggested_aliases_empty": true
+    }
+  },
+  {
+    "id": "limit-01",
+    "description": "Limit parameter caps results",
+    "request": { "query": "office lights", "limit": 1, "min_confidence": 0.5 },
+    "expect": {
+      "matches_length_lte": 1,
+      "missing": false
+    }
+  },
+  {
+    "id": "min-confidence-01",
+    "description": "min_confidence=0.99 excludes casefold match (0.98)",
+    "request": { "query": "office lights", "min_confidence": 0.99 },
+    "expect": {
+      "missing": true
+    }
+  },
+  {
+    "id": "determinism-01",
+    "description": "Identical confidence — entity_id sort is stable (light.office_lights < light.office_lights_2)",
+    "request": { "query": "office lights", "min_confidence": 0.5 },
+    "expect": {
+      "best_entity_id": "light.office_lights",
+      "matches_order_deterministic": true
+    }
+  }
+]
