@@ -1,0 +1,155 @@
+[
+  {
+    "id": "missing-v-01",
+    "description": "Invalid: missing required field v",
+    "input": {
+      "kind": "automation",
+      "name": "No version",
+      "actions": [{ "service": "light.turn_on", "targets": ["Office Lights"] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "v"
+    }
+  },
+  {
+    "id": "wrong-v-01",
+    "description": "Invalid: v must be exactly 1",
+    "input": {
+      "v": 2,
+      "kind": "automation",
+      "name": "Wrong version",
+      "actions": [{ "service": "light.turn_on", "targets": ["Office Lights"] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "v"
+    }
+  },
+  {
+    "id": "wrong-kind-01",
+    "description": "Invalid: kind must be 'automation'",
+    "input": {
+      "v": 1,
+      "kind": "scene",
+      "name": "Wrong kind",
+      "actions": [{ "service": "light.turn_on", "targets": ["Office Lights"] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "kind"
+    }
+  },
+  {
+    "id": "empty-name-01",
+    "description": "Invalid: name is empty string",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "",
+      "actions": [{ "service": "light.turn_on", "targets": ["Office Lights"] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "name"
+    }
+  },
+  {
+    "id": "empty-actions-01",
+    "description": "Invalid: actions array is empty",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "No actions",
+      "actions": []
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "actions"
+    }
+  },
+  {
+    "id": "no-targets-or-entity-ids-01",
+    "description": "Invalid: action has neither targets nor entity_ids",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Missing targets",
+      "actions": [{ "service": "light.turn_on" }]
+    },
+    "expect": {
+      "ok": false,
+      "error_count_gte": 1
+    }
+  },
+  {
+    "id": "bad-service-format-01",
+    "description": "Invalid: service does not match domain.service pattern",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Bad service",
+      "actions": [{ "service": "LIGHT.TURN_ON", "targets": ["Office Lights"] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "service"
+    }
+  },
+  {
+    "id": "bad-entity-id-format-01",
+    "description": "Invalid: entity_id does not match domain.entity pattern",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Bad entity_id",
+      "actions": [{ "service": "light.turn_on", "entity_ids": ["LightOfficeMain"] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "entity_ids"
+    }
+  },
+  {
+    "id": "unknown-top-level-key-01",
+    "description": "Invalid: unknown top-level key not allowed (additionalProperties: false)",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Extra keys",
+      "actions": [{ "service": "light.turn_on", "targets": ["Office Lights"] }],
+      "unknown_field": "should be rejected"
+    },
+    "expect": {
+      "ok": false,
+      "error_count_gte": 1
+    }
+  },
+  {
+    "id": "missing-actions-01",
+    "description": "Invalid: actions field is absent entirely",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "No actions field"
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "actions"
+    }
+  },
+  {
+    "id": "empty-targets-array-01",
+    "description": "Invalid: targets is present but empty array",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Empty targets array",
+      "actions": [{ "service": "light.turn_on", "targets": [] }]
+    },
+    "expect": {
+      "ok": false,
+      "error_path_contains": "targets"
+    }
+  }
+    ]
