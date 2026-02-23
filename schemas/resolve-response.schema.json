@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Entity Resolve Response",
+  "description": "Output schema for the entity resolver (Phase 3 Step 2). Emitted by lib/entity-resolver.ts to stdout. Consumed by Step 3 YAML generator to gate automation generation.",
+  "type": "object",
+  "required": ["query", "matches", "missing", "needs_review", "suggested_aliases"],
+  "additionalProperties": false,
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The original query string that was resolved."
+    },
+    "matches": {
+      "type": "array",
+      "description": "Candidate matches sorted by confidence descending, capped at limit. Empty array when nothing meets min_confidence.",
+      "items": { "$ref": "#/definitions/Match" }
+    },
+    "best": {
+      "description": "The highest-confidence match, or absent if matches is empty.",
+      "oneOf": [
+        { "$ref": "#/definitions/Match" },
+        { "type": "null" }
+      ]
+    },
+    "missing": {
+      "type": "boolean",
+      "description": "True when matches is empty. Step 3 MUST block YAML generation when missing=true."
+    },
+    "needs_review": {
+      "type": "boolean",
+      "description": "True when best.confidence < min_confidence or when best.match_type is not in [exact, casefold, alias_exact]. Step 3 MUST flag the result for human review before applying."
+    },
+    "suggested_aliases": {
+      "type": "array",
+      "description": "Alias patches a human can approve and add to entities.json. Only populated when best.confidence >= 0.85 and the query is not already in the entity aliases or friendly_name.",
+      "items": { "$ref": "#/definitions/AliasSuggestion" }
+    }
+  },
+  "definitions": {
+    "Match": {
+      "type": "object",
+      "required": ["entity_id", "friendly_name", "domain", "confidence", "match_type", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "pattern": "^[a-z_]+\\.[a-z0-9_]+$",
+          "description": "Canonical HA entity identifier resolved from the query."
+        },
+        "friendly_name": {
+          "type": "string",
+          "description": "Human-readable label from the inventory."
+        },
+        "domain": {
+          "type": "string",
+          "description": "HA domain of the resolved entity."
+        },
+        "area": {
+          "type": "string",
+          "description": "Area from inventory, if present."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence score 0..1. Includes domain/area hint boosts. Clamped to 1.0."
+        },
+        "match_type": {
+          "type": "string",
+          "enum": ["exact", "casefold", "alias_exact", "normalized", "token_set", "substring", "none"],
+          "description": "Which matching stage produced this result. Used by Step 3 to decide gating behaviour."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Short human-readable explanation of why this match was selected."
+        }
+      }
+    },
+    "AliasSuggestion": {
+      "type": "object",
+      "required": ["entity_id", "add_alias"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "pattern": "^[a-z_]+\\.[a-z0-9_]+$"
+        },
+        "add_alias": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The alias string to add to entities.json. Must be approved by a human before application."
+        }
+      }
+    }
+  }
+}
