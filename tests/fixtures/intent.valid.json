@@ -1,0 +1,135 @@
+[
+  {
+    "id": "minimal-01",
+    "description": "Minimal valid intent: only required fields, targets provided",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Turn on office lights",
+      "actions": [
+        {
+          "service": "light.turn_on",
+          "targets": ["Office Lights"]
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "intent_name": "Turn on office lights",
+      "actions_length": 1
+    }
+  },
+  {
+    "id": "entity-ids-01",
+    "description": "Valid intent using entity_ids instead of targets",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Turn off kitchen fridge socket",
+      "actions": [
+        {
+          "service": "switch.turn_off",
+          "entity_ids": ["switch.kitchen_fridge_socket"]
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "intent_name": "Turn off kitchen fridge socket"
+    }
+  },
+  {
+    "id": "full-01",
+    "description": "Full intent with all optional fields: description, triggers, conditions, metadata, data",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Evening scene",
+      "description": "Dim office lights and turn on loft light at sunset",
+      "actions": [
+        {
+          "service": "light.turn_on",
+          "targets": ["Office Lights"],
+          "data": { "brightness_pct": 30, "transition": 2 }
+        },
+        {
+          "service": "light.turn_on",
+          "targets": ["Loft LIFX"],
+          "data": { "color_temp": 400 }
+        }
+      ],
+      "triggers": [
+        { "platform": "sun", "event": "sunset", "offset": "-00:30:00" }
+      ],
+      "conditions": [
+        { "condition": "state", "entity_id": "person.owner", "state": "home" }
+      ],
+      "metadata": {
+        "area_hint": "Office & Studio",
+        "domain_hint": "light",
+        "source_ui": "weekend-agent-panel"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "intent_name": "Evening scene",
+      "actions_length": 2
+    }
+  },
+  {
+    "id": "both-targets-and-entity-ids-01",
+    "description": "Valid: both targets and entity_ids present — both optional individually but contract satisfied",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Mixed targets test",
+      "actions": [
+        {
+          "service": "light.turn_on",
+          "targets": ["Office Lights"],
+          "entity_ids": ["light.loft_lifx"]
+        }
+      ]
+    },
+    "expect": {
+      "ok": true
+    }
+  },
+  {
+    "id": "name-trim-01",
+    "description": "Valid: name with surrounding whitespace is trimmed during normalization",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "  Padded name  ",
+      "actions": [
+        {
+          "service": "light.turn_off",
+          "targets": ["Nook Ceiling"]
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "intent_name": "Padded name"
+    }
+  },
+  {
+    "id": "no-optional-fields-01",
+    "description": "Valid: no triggers, conditions, metadata, or description",
+    "input": {
+      "v": 1,
+      "kind": "automation",
+      "name": "Simple switch off",
+      "actions": [
+        {
+          "service": "switch.turn_off",
+          "targets": ["fridge socket"]
+        }
+      ]
+    },
+    "expect": {
+      "ok": true
+    }
+  }
+      ]
