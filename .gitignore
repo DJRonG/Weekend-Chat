@@ -1,0 +1,60 @@
+# ─── Node ────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── Build output ─────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+.output/
+
+# ─── Environment / secrets ────────────────────────────────────────────────────
+# Never commit tokens, API keys, or local config
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# ─── Agent generated artefacts ───────────────────────────────────────────────
+# The .agent/ directory contains ONLY locally-generated state.
+# None of it should ever be committed.
+#
+# Specifically:
+#   .agent/inventory/entities.json  — live HA entity snapshot (changes on every run)
+#   .agent/out/                     — generated YAML (Step 3, not yet implemented)
+#   .agent/audit/                   — audit log entries (Step N, not yet implemented)
+#
+.agent/
+
+# ─── OS artefacts ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ─── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Vercel ───────────────────────────────────────────────────────────────────
+.vercel
+.vc-config.json
+
+# ─── TypeScript build cache ───────────────────────────────────────────────────
+*.tsbuildinfo
+node_modules/.tmp/
+
+# ─── Turso / SQLite local ────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
