@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-02-23T12:00:00.000Z",
+  "source": "GET /api/states",
+  "ha_url": "http://192.168.1.229:8123",
+  "entities": [
+    {
+      "entity_id": "light.office_lights",
+      "friendly_name": "Office Lights",
+      "domain": "light",
+      "area": "Office & Studio",
+      "state": "off",
+      "aliases": ["ron's office lights", "work lights"]
+    },
+    {
+      "entity_id": "light.office_lights_2",
+      "friendly_name": "Office Lights 2",
+      "domain": "light",
+      "area": "Office & Studio",
+      "state": "off",
+      "aliases": []
+    },
+    {
+      "entity_id": "switch.kitchen_fridge_socket",
+      "friendly_name": "Kitchen Fridge Socket",
+      "domain": "switch",
+      "area": "Kitchen & Breakfast Nook",
+      "state": "on",
+      "aliases": ["fridge", "fridge socket"]
+    },
+    {
+      "entity_id": "binary_sensor.kitchen_motion_sensor",
+      "friendly_name": "Kitchen Motion Sensor",
+      "domain": "binary_sensor",
+      "area": "Kitchen & Breakfast Nook",
+      "state": "off",
+      "aliases": ["kitchen motion", "motion kitchen"]
+    },
+    {
+      "entity_id": "light.loft_lifx",
+      "friendly_name": "Loft LIFX",
+      "domain": "light",
+      "area": "Bedroom & Loft",
+      "state": "off",
+      "aliases": ["loft light", "lifx loft"]
+    },
+    {
+      "entity_id": "switch.office_socket_2",
+      "friendly_name": "Office Socket 2",
+      "domain": "switch",
+      "area": "Office & Studio",
+      "state": "on",
+      "aliases": []
+    },
+    {
+      "entity_id": "sensor.ev_battery_level",
+      "friendly_name": "EV Battery Level",
+      "domain": "sensor",
+      "state": "62",
+      "aliases": ["ev charge", "car battery", "electric vehicle level"]
+    },
+    {
+      "entity_id": "light.nook_ceiling",
+      "friendly_name": "Nook Ceiling",
+      "domain": "light",
+      "area": "Kitchen & Breakfast Nook",
+      "state": "off",
+      "aliases": ["nook light", "breakfast nook ceiling"]
+    }
+  ]
+}
