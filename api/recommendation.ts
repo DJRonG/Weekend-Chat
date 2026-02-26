@@ -53,6 +53,9 @@ interface Weather {
   rain_probability: number;
 }
 
+/** Trip distance (miles) above which a critically low EV charge becomes a strong rideshare signal */
+const LONG_TRIP_THRESHOLD_MILES = 10;
+
 // Mobility Engine (inline for Vercel serverless)
 class MobilityEngine {
   private calculateDistance(
@@ -77,6 +80,7 @@ class MobilityEngine {
   private evaluateWeather(
     temp: number,
     rainProbability: number,
+    condition: string,
     settings: UserSettings
   ): { score: number; reason: string } {
     let score = 0;
@@ -95,6 +99,22 @@ class MobilityEngine {
     if (rainProbability > settings.rain_drive_threshold) {
       score += 40;
       reasons.push(`${rainProbability}% chance of rain (above ${settings.rain_drive_threshold}% threshold)`);
+    }
+
+    // Condition-based scoring (Stormy/Snowy/Rainy conditions increase drive/rideshare preference)
+    switch (condition.toLowerCase()) {
+      case 'stormy':
+        score += 50;
+        reasons.push('Stormy conditions - rideshare strongly recommended');
+        break;
+      case 'snowy':
+        score += 40;
+        reasons.push('Snowy conditions - driving hazardous');
+        break;
+      case 'rainy':
+        score += 20;
+        reasons.push('Rainy conditions');
+        break;
     }
 
     return { score, reason: reasons.join('; ') };
@@ -138,16 +158,37 @@ class MobilityEngine {
     return { score, reason: reasons.join('; ') };
   }
 
+  private evaluateTimeOfDay(): { score: number; reason: string } {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); // 0=Sun, 6=Sat
+    const isWeekday = day >= 1 && day <= 5;
+
+    if (isWeekday && ((hour >= 7 && hour < 9) || (hour >= 17 && hour < 19))) {
+      return { score: 25, reason: 'Rush hour - expect heavier traffic and parking difficulty' };
+    }
+    if (hour >= 22 || hour < 6) {
+      return { score: 20, reason: 'Late night travel - rideshare recommended for safety' };
+    }
+    return { score: 0, reason: '' };
+  }
+
   private evaluateHomeStatus(
-    homeStatus: HomeStatus | null
+    homeStatus: HomeStatus | null,
+    distance: number = 0
   ): { score: number; reason: string } {
     let score = 0;
     const reasons: string[] = [];
 
     if (homeStatus?.ev_charge_percentage !== undefined) {
       if (homeStatus.ev_charge_percentage < 20) {
-        score += 40;
-        reasons.push(`EV charge low at ${homeStatus.ev_charge_percentage}%`);
+        if (distance > LONG_TRIP_THRESHOLD_MILES) {
+          score += 60;
+          reasons.push(`EV charge critically low (${homeStatus.ev_charge_percentage}%) for a ${distance.toFixed(1)} mile trip - rideshare strongly recommended`);
+        } else {
+          score += 40;
+          reasons.push(`EV charge low at ${homeStatus.ev_charge_percentage}%`);
+        }
       } else {
         reasons.push(`EV charged at ${homeStatus.ev_charge_percentage}%`);
       }
@@ -174,12 +215,14 @@ class MobilityEngine {
       parkingScore: 0,
       eventScore: 0,
       homeStatusScore: 0,
-      distanceScore: 0
+      distanceScore: 0,
+      timeOfDayScore: 0
     };
 
     const reasons: string[] = [];
 
-    const weatherEval = this.evaluateWeather(weather.temp, weather.rain_probability, settings);
+    // Weather evaluation (includes condition: Stormy/Snowy/Rainy)
+    const weatherEval = this.evaluateWeather(weather.temp, weather.rain_probability, weather.condition, settings);
     factors.weatherScore = weatherEval.score;
     reasons.push(weatherEval.reason);
 
@@ -187,7 +230,8 @@ class MobilityEngine {
     factors.parkingScore = parkingEval.score;
     reasons.push(parkingEval.reason);
 
-    const homeEval = this.evaluateHomeStatus(homeStatus);
+    // Home status evaluation (now considers trip distance for EV range)
+    const homeEval = this.evaluateHomeStatus(homeStatus, distance);
     factors.homeStatusScore = homeEval.score;
     if (homeEval.reason) reasons.push(homeEval.reason);
 
@@ -215,12 +259,18 @@ class MobilityEngine {
       reasons.push(`${nearbyEvents.length} event(s) nearby may affect travel`);
     }
 
-    const totalScore = 
-      factors.weatherScore + 
-      factors.parkingScore + 
-      factors.eventScore + 
-      factors.homeStatusScore + 
-      factors.distanceScore;
+    // Time-of-day evaluation (rush hour, late night)
+    const timeEval = this.evaluateTimeOfDay();
+    factors.timeOfDayScore = timeEval.score;
+    if (timeEval.reason) reasons.push(timeEval.reason);
+
+    const totalScore =
+      factors.weatherScore +
+      factors.parkingScore +
+      factors.eventScore +
+      factors.homeStatusScore +
+      factors.distanceScore +
+      factors.timeOfDayScore;
 
     let recommendation: 'Walk' | 'Drive' | 'Rideshare';
     let confidence: number;
@@ -261,6 +311,15 @@ class MobilityEngine {
       home_status: {
         garden_watered: homeStatus?.garden_watered || false,
         ev_charge: homeStatus?.ev_charge_percentage
+      },
+      score_breakdown: {
+        weather: factors.weatherScore,
+        parking: factors.parkingScore,
+        events: factors.eventScore,
+        home_status: factors.homeStatusScore,
+        distance: factors.distanceScore,
+        time_of_day: factors.timeOfDayScore,
+        total: totalScore
       },
       friday_recap: undefined as string | undefined
     };

@@ -70,4 +70,13 @@ export interface MobilityRecommendation {
     ev_charge?: number;
   };
   friday_recap?: string;
+  score_breakdown: {
+    weather: number;
+    parking: number;
+    events: number;
+    home_status: number;
+    distance: number;
+    time_of_day: number;
+    total: number;
+  };
 }
