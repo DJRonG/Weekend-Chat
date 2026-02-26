@@ -27,7 +27,7 @@ function setCache(key: string, value: string): void {
 }
 
 function isEnabled(): boolean {
-  return Boolean(API_KEY) && import.meta.env.VITE_ANALYTICS_ENABLED !== 'false';
+  return Boolean(API_KEY);
 }
 
 let genAI: GoogleGenerativeAI | null = null;

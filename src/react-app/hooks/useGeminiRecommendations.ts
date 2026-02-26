@@ -3,6 +3,8 @@ import type { Destination, HomeStatus, Weather, AlternativeDestination, Analysis
 import { generateRecommendation, suggestAlternatives, isGeminiEnabled, clearCache } from '@/react-app/services/geminiService';
 import { buildAIContext } from '@/react-app/services/aiContextBuilder';
 
+const RECOMMENDATION_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
 interface GeminiState {
   loading: boolean;
   error: string | null;
@@ -58,11 +60,11 @@ export function useGeminiRecommendations(): UseGeminiRecommendations {
       const result = await generateRecommendation(context);
       setState(prev => ({ ...prev, recommendation: result, loading: false }));
 
-      // Auto-clear after 30 minutes
+      // Auto-clear after configured TTL
       if (cacheTimeoutRef.current) clearTimeout(cacheTimeoutRef.current);
       cacheTimeoutRef.current = setTimeout(() => {
         setState(prev => ({ ...prev, recommendation: null }));
-      }, 30 * 60 * 1000);
+      }, RECOMMENDATION_CACHE_TTL_MS);
     } catch (error) {
       setState(prev => ({
         ...prev,

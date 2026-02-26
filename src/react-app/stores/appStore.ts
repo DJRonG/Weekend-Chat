@@ -4,6 +4,8 @@ import { useEventStore } from './eventStore';
 import { useUserPreferenceStore } from './userPreferenceStore';
 import { useJourneyStore } from './journeyStore';
 
+const AUTO_SYNC_INTERVAL_MS = 30000;
+
 interface AppState {
   isInitialized: boolean;
   isLoading: boolean;
@@ -45,9 +47,13 @@ export const useAppStore = create<AppState>((set) => ({
   },
 }));
 
-// Auto-save every 30 seconds
-if (typeof window !== 'undefined') {
-  setInterval(() => {
+/**
+ * Start periodic auto-sync. Returns a cleanup function to stop it.
+ * Call from a top-level useEffect in your app root.
+ */
+export function startAutoSync(): () => void {
+  const id = setInterval(() => {
     useAppStore.getState().syncWithDatabase();
-  }, 30000);
+  }, AUTO_SYNC_INTERVAL_MS);
+  return () => clearInterval(id);
 }

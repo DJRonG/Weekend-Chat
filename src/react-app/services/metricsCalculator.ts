@@ -19,14 +19,13 @@ export type UserSegment = 'early_adopter' | 'casual' | 'power_user' | 'churned';
 
 export function classifyUser(events: AnalyticsEvent[], sessionId: string): UserSegment {
   const userEvents = events.filter(e => e.session_id === sessionId);
-  const sessionCount = new Set(userEvents.map(e => e.session_id)).size;
   const daysSinceLastSeen = userEvents.length > 0
     ? (Date.now() - new Date(userEvents[userEvents.length - 1].timestamp).getTime()) / (1000 * 60 * 60 * 24)
     : Infinity;
 
   if (daysSinceLastSeen > 30) return 'churned';
   if (userEvents.length > 50) return 'power_user';
-  if (sessionCount < 3) return 'early_adopter';
+  if (userEvents.length < 5) return 'early_adopter';
   return 'casual';
 }
 

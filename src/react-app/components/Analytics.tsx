@@ -92,7 +92,9 @@ export default function Analytics() {
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, value }: { name: string; value: number }) => `${name}: ${value}`}
+                  label={({ name, value, percent }: { name: string; value: number; percent: number }) =>
+                    `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                  }
                 >
                   {pieData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>

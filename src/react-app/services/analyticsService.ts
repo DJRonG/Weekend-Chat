@@ -35,9 +35,11 @@ export async function trackEvent(event: Omit<AnalyticsEvent, 'id'>): Promise<voi
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(event),
-    }).catch(() => { /* ignore network errors */ });
-  } catch {
-    // Ignore failures - analytics is non-critical
+    }).catch((err: unknown) => {
+      console.debug('[Analytics] Backend sync failed (non-critical):', err);
+    });
+  } catch (err) {
+    console.debug('[Analytics] Failed to send event (non-critical):', err);
   }
 }
 

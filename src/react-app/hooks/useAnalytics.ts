@@ -26,7 +26,8 @@ export function useAnalytics(): UseAnalytics {
 
   const flushBatch = useCallback(async () => {
     if (batchRef.current.length === 0) return;
-    const toSend = batchRef.current.splice(0, batchRef.current.length);
+    const toSend = batchRef.current.slice();
+    batchRef.current = [];
     await Promise.all(toSend.map(e => trackEvent(e)));
   }, []);
 
