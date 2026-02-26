@@ -1,18 +1,63 @@
-import { MobilityRecommendation, Event, Destination, HomeStatus, UserSettings } from '@/shared/types';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@libsql/client';
 
-interface MobilityFactors {
-  weatherScore: number;
-  parkingScore: number;
-  eventScore: number;
-  homeStatusScore: number;
-  distanceScore: number;
-  timeOfDayScore: number;
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN!,
+});
+
+// Types
+interface Destination {
+  id: number;
+  name: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  typical_parking_difficulty?: string;
+  has_parking_garage?: boolean;
+  parking_cost_estimate?: number;
+}
+
+interface Event {
+  id: number;
+  name: string;
+  venue_name?: string;
+  latitude?: number;
+  longitude?: number;
+  start_datetime: string;
+  end_datetime?: string;
+  expected_attendance?: number;
+  is_road_closure?: boolean;
+}
+
+interface HomeStatus {
+  id: number;
+  ev_charge_percentage?: number;
+  garden_watered?: boolean;
+  last_watered_at?: string;
+}
+
+interface UserSettings {
+  id: number;
+  home_latitude?: number;
+  home_longitude?: number;
+  max_comfortable_walk_distance: number;
+  temperature_drive_threshold_high: number;
+  temperature_drive_threshold_low: number;
+  rain_drive_threshold: number;
+}
+
+interface Weather {
+  temp: number;
+  condition: string;
+  rain_probability: number;
 }
 
 /** Trip distance (miles) above which a critically low EV charge becomes a strong rideshare signal */
 const LONG_TRIP_THRESHOLD_MILES = 10;
 
-export class MobilityEngine {
+// Mobility Engine (inline for Vercel serverless)
+class MobilityEngine {
   private calculateDistance(
     lat1?: number,
     lon1?: number,
@@ -82,7 +127,6 @@ export class MobilityEngine {
     let score = 0;
     const reasons: string[] = [];
 
-    // High traffic events increase parking difficulty
     if (nearbyEvents.length > 0) {
       const largeEvents = nearbyEvents.filter(e => e.expected_attendance && e.expected_attendance > 5000);
       if (largeEvents.length > 0) {
@@ -91,7 +135,6 @@ export class MobilityEngine {
       }
     }
 
-    // Base parking difficulty
     switch (destination.typical_parking_difficulty?.toLowerCase()) {
       case 'high':
         score += 30;
@@ -164,10 +207,10 @@ export class MobilityEngine {
     nearbyEvents: Event[],
     homeStatus: HomeStatus | null,
     settings: UserSettings,
-    weather: { temp: number; condition: string; rain_probability: number },
+    weather: Weather,
     distance: number
-  ): MobilityRecommendation {
-    const factors: MobilityFactors = {
+  ) {
+    const factors = {
       weatherScore: 0,
       parkingScore: 0,
       eventScore: 0,
@@ -183,7 +226,6 @@ export class MobilityEngine {
     factors.weatherScore = weatherEval.score;
     reasons.push(weatherEval.reason);
 
-    // Parking evaluation
     const parkingEval = this.evaluateParking(destination, nearbyEvents);
     factors.parkingScore = parkingEval.score;
     reasons.push(parkingEval.reason);
@@ -193,7 +235,6 @@ export class MobilityEngine {
     factors.homeStatusScore = homeEval.score;
     if (homeEval.reason) reasons.push(homeEval.reason);
 
-    // Distance evaluation
     if (distance > 0) {
       if (distance > 5) {
         factors.distanceScore += 40;
@@ -208,7 +249,7 @@ export class MobilityEngine {
       }
     }
 
-    // Road closure / event evaluation
+    // Road closure evaluation
     const roadClosures = nearbyEvents.filter(e => e.is_road_closure);
     if (roadClosures.length > 0) {
       factors.eventScore += 30;
@@ -223,7 +264,6 @@ export class MobilityEngine {
     factors.timeOfDayScore = timeEval.score;
     if (timeEval.reason) reasons.push(timeEval.reason);
 
-    // Calculate total score
     const totalScore =
       factors.weatherScore +
       factors.parkingScore +
@@ -232,7 +272,6 @@ export class MobilityEngine {
       factors.distanceScore +
       factors.timeOfDayScore;
 
-    // Determine recommendation
     let recommendation: 'Walk' | 'Drive' | 'Rideshare';
     let confidence: number;
 
@@ -281,7 +320,8 @@ export class MobilityEngine {
         distance: factors.distanceScore,
         time_of_day: factors.timeOfDayScore,
         total: totalScore
-      }
+      },
+      friday_recap: undefined as string | undefined
     };
   }
 
@@ -302,5 +342,166 @@ export class MobilityEngine {
       );
       return distance <= radiusMiles;
     });
+  }
+}
+
+const mobilityEngine = new MobilityEngine();
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { destination_id, weather } = req.body;
+
+    if (!destination_id) {
+      return res.status(400).json({ error: 'destination_id is required' });
+    }
+
+    // Get destination
+    const destResult = await db.execute({
+      sql: 'SELECT * FROM destinations WHERE id = ?',
+      args: [destination_id],
+    });
+    
+    if (destResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+    
+    const destination = destResult.rows[0] as unknown as Destination;
+
+    // Get user settings
+    let settingsResult = await db.execute(
+      'SELECT * FROM user_settings ORDER BY id DESC LIMIT 1'
+    );
+    
+    if (settingsResult.rows.length === 0) {
+      // Create default settings
+      await db.execute({
+        sql: `INSERT INTO user_settings 
+              (max_comfortable_walk_distance, temperature_drive_threshold_high, 
+               temperature_drive_threshold_low, rain_drive_threshold) 
+              VALUES (?, ?, ?, ?)`,
+        args: [1.5, 30, 5, 40],
+      });
+      
+      settingsResult = await db.execute(
+        'SELECT * FROM user_settings ORDER BY id DESC LIMIT 1'
+      );
+    }
+    
+    const settings = settingsResult.rows[0] as unknown as UserSettings;
+
+    // Get current/upcoming events
+    const now = new Date().toISOString();
+    const eventsResult = await db.execute({
+      sql: `SELECT * FROM events 
+            WHERE start_datetime >= ? OR end_datetime >= ? 
+            ORDER BY start_datetime`,
+      args: [now, now],
+    });
+    
+    const events = eventsResult.rows as unknown as Event[];
+
+    // Find nearby events
+    const nearbyEvents = mobilityEngine.findNearbyEvents(
+      destination,
+      events,
+      settings.max_comfortable_walk_distance
+    );
+
+    // Get home status
+    const homeResult = await db.execute(
+      'SELECT * FROM home_status ORDER BY id DESC LIMIT 1'
+    );
+    const homeStatus = (homeResult.rows[0] as unknown as HomeStatus) || null;
+
+    // Calculate distance
+    let distance = 0;
+    if (
+      settings?.home_latitude &&
+      settings?.home_longitude &&
+      destination.latitude &&
+      destination.longitude
+    ) {
+      const R = 3958.8;
+      const dLat = (destination.latitude - settings.home_latitude) * (Math.PI / 180);
+      const dLon = (destination.longitude - settings.home_longitude) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(settings.home_latitude * (Math.PI / 180)) *
+        Math.cos(destination.latitude * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      distance = R * c;
+    }
+
+    // Generate recommendation
+    const recommendation = mobilityEngine.generateRecommendation(
+      destination,
+      nearbyEvents,
+      homeStatus,
+      settings,
+      weather || { temp: 20, condition: 'Clear', rain_probability: 0 },
+      distance
+    );
+
+    // Get recent conversation notes for Friday recap
+    const notesResult = await db.execute(
+      `SELECT * FROM conversation_notes 
+       WHERE date_logged >= date('now', '-7 days') 
+       ORDER BY date_logged DESC LIMIT 5`
+    );
+
+    if (notesResult.rows.length > 0) {
+      const recapParts: string[] = [];
+      notesResult.rows.forEach((note: Record<string, unknown>) => {
+        if (note.contact_name && note.venue_mentioned) {
+          recapParts.push(
+            `You mentioned wanting to see ${note.contact_name} - they usually prefer ${note.venue_mentioned}`
+          );
+        } else if (note.emotional_state) {
+          recapParts.push(`Recent mood: ${note.emotional_state} - ${note.note_text}`);
+        }
+      });
+      if (recapParts.length > 0) {
+        recommendation.friday_recap = recapParts.join('. ');
+      }
+    }
+
+    // Store recommendation
+    await db.execute({
+      sql: `INSERT INTO mobility_recommendations 
+            (destination_id, recommendation, confidence_score, reasoning, 
+             weather_temp, weather_condition, rain_probability, 
+             parking_difficulty, estimated_cost) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        destination_id,
+        recommendation.recommendation,
+        recommendation.confidence_score,
+        recommendation.reasoning,
+        recommendation.weather.temp,
+        recommendation.weather.condition,
+        recommendation.weather.rain_probability,
+        recommendation.parking.difficulty,
+        recommendation.parking.estimated_cost || null,
+      ],
+    });
+
+    return res.status(200).json(recommendation);
+  } catch (error) {
+    console.error('Error generating recommendation:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

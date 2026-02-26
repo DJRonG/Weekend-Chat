@@ -193,12 +193,26 @@ class MobilityEngine {
 
     if (distance > 0) {
       if (distance > 5) {
+        factors.distanceScore += 40;
+        reasons.push(`Destination is ${distance.toFixed(1)} miles away - too far to walk`);
+      } else if (distance <= settings.max_comfortable_walk_distance) {
         factors.distanceScore -= 20;
+        reasons.push(`Destination is only ${distance.toFixed(1)} miles away - walkable`);
+      } else {
+        // Mid-range: driveable but not too far - slight preference for driving
+        factors.distanceScore += 10;
         reasons.push(`Destination is ${distance.toFixed(1)} miles away`);
-      } else if (distance < 1) {
-        factors.distanceScore += 30;
-        reasons.push(`Destination is only ${distance.toFixed(1)} miles away`);
       }
+    }
+
+    // Road closure evaluation
+    const roadClosures = nearbyEvents.filter(e => e.is_road_closure);
+    if (roadClosures.length > 0) {
+      factors.eventScore += 30;
+      reasons.push(`${roadClosures.length} road closure(s) in the area - consider rideshare`);
+    } else if (nearbyEvents.length > 0) {
+      factors.eventScore += 10;
+      reasons.push(`${nearbyEvents.length} event(s) nearby may affect travel`);
     }
 
     const totalScore = 
@@ -312,8 +326,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'SELECT * FROM user_settings ORDER BY id DESC LIMIT 1'
     );
     
-    let settings: UserSettings;
-    
     if (settingsResult.rows.length === 0) {
       // Create default settings
       await db.execute({
@@ -329,7 +341,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
     }
     
-    settings = settingsResult.rows[0] as unknown as UserSettings;
+    const settings = settingsResult.rows[0] as unknown as UserSettings;
 
     // Get current/upcoming events
     const now = new Date().toISOString();
@@ -394,7 +406,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (notesResult.rows.length > 0) {
       const recapParts: string[] = [];
-      notesResult.rows.forEach((note: any) => {
+      notesResult.rows.forEach((note: Record<string, unknown>) => {
         if (note.contact_name && note.venue_mentioned) {
           recapParts.push(
             `You mentioned wanting to see ${note.contact_name} - they usually prefer ${note.venue_mentioned}`
