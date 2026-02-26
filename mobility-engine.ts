@@ -153,12 +153,26 @@ export class MobilityEngine {
     // Distance evaluation
     if (distance > 0) {
       if (distance > 5) {
+        factors.distanceScore += 40;
+        reasons.push(`Destination is ${distance.toFixed(1)} miles away - too far to walk`);
+      } else if (distance <= settings.max_comfortable_walk_distance) {
         factors.distanceScore -= 20;
+        reasons.push(`Destination is only ${distance.toFixed(1)} miles away - walkable`);
+      } else {
+        // Mid-range: driveable but not too far - slight preference for driving
+        factors.distanceScore += 10;
         reasons.push(`Destination is ${distance.toFixed(1)} miles away`);
-      } else if (distance < 1) {
-        factors.distanceScore += 30;
-        reasons.push(`Destination is only ${distance.toFixed(1)} miles away`);
       }
+    }
+
+    // Road closure evaluation
+    const roadClosures = nearbyEvents.filter(e => e.is_road_closure);
+    if (roadClosures.length > 0) {
+      factors.eventScore += 30;
+      reasons.push(`${roadClosures.length} road closure(s) in the area - consider rideshare`);
+    } else if (nearbyEvents.length > 0) {
+      factors.eventScore += 10;
+      reasons.push(`${nearbyEvents.length} event(s) nearby may affect travel`);
     }
 
     // Calculate total score
