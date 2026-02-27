@@ -1,0 +1,96 @@
+# ui/dashboards/rooms.yaml
+# Home Command — Rooms view
+# Step 4B canonical. Per-room entities cards, consistent format.
+# Last updated: 2026-02-27 (Step 4 polish pass)
+# Source: Home Assistant storage mode dashboard, Home Command dashboard
+
+title: Rooms
+path: rooms
+icon: mdi:floor-plan
+cards:
+
+  # ── Kitchen ── lights + scenes stacked
+  - type: vertical-stack
+    cards:
+      - type: entities
+        title: Kitchen
+        entities:
+          - entity: switch.kitchen_lights_led
+            name: LED Strip
+            icon: mdi:led-strip-variant
+          - entity: switch.breakfast_nook_ceiling_lights
+            name: Nook Ceiling
+            icon: mdi:ceiling-light
+          - entity: switch.breakfast_nook_lights
+            name: Nook
+            icon: mdi:lamp
+          - entity: binary_sensor.smart_presence_sensor_occupancy
+            name: Occupied
+            icon: mdi:motion-sensor
+          - entity: sensor.smart_presence_sensor_illuminance
+            name: Lux
+            icon: mdi:brightness-5
+      - type: entities
+        title: Scenes
+        entities:
+          - entity: scene.kitchen_bright
+            name: Bright
+            icon: mdi:white-balance-sunny
+          - entity: scene.kitchen_dim
+            name: Dim
+            icon: mdi:brightness-3
+          - entity: scene.evening_wind_down
+            name: Evening
+            icon: mdi:weather-sunset
+
+  # ── Living Room
+  - type: entities
+    title: Living Room
+    entities:
+      - entity: media_player.living_room_speakers
+        name: Sonos
+        icon: mdi:speaker
+      - entity: media_player.lg_webos_tv_oled65c4pua_3
+        name: LG TV
+        icon: mdi:television
+
+  # ── Loft
+  - type: entities
+    title: Loft
+    entities:
+      - entity: media_player.loft
+        name: Sonos
+        icon: mdi:speaker
+      - entity: media_player.loft_tv_television
+        name: TV
+        icon: mdi:television
+
+  # ── Ron's Office
+  - type: entities
+    title: Ron's Office
+    entities:
+      - entity: media_player.ron_s_office
+        name: Sonos
+        icon: mdi:speaker
+
+  # ── Laundry
+  - type: entities
+    title: Laundry
+    entities:
+      - entity: binary_sensor.washer_power
+        name: Washer
+        icon: mdi:washing-machine
+      - entity: binary_sensor.dryer_power
+        name: Dryer
+        icon: mdi:tumble-dryer
+
+  # ── Entryway
+  - type: entities
+    title: Entryway
+    entities:
+      - entity: switch.entryway_motion_sensor_light
+        name: Motion Light
+        icon: mdi:motion-sensor
+      - entity: switch.outside_lights
+        name: Outside
+        icon: mdi:outdoor-lamp
