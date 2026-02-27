@@ -1,0 +1,81 @@
+# ui/dashboards/media.yaml
+# Home Command — Media view
+# Step 4B canonical. Section order: Music Asst > Cast Devices > TVs > Room Detail
+# No media-control cards (removed cyan background). Entities cards only.
+# Last updated: 2026-02-27 (Step 4 polish pass)
+# Source: Home Assistant storage mode dashboard, Home Command dashboard
+#
+# Entity notes:
+#   media_player.bedroom        = Kitchen Sonos speaker (entity alias)
+#   media_player.loft_tv_television = confirmed Loft TV entity
+
+title: Media
+path: media
+icon: mdi:music
+cards:
+
+  # ── Music Assistant update status
+  - type: entity
+    entity: update.music_assistant_update
+    name: Music Assistant
+    icon: mdi:music-circle
+
+  # ── Cast Devices — all Sonos speakers (glance for compact overview)
+  - type: glance
+    title: Cast Devices
+    show_name: true
+    show_state: true
+    show_icon: true
+    columns: 3
+    entities:
+      - entity: media_player.living_room_speakers
+        name: Living Room
+        icon: mdi:speaker
+      - entity: media_player.loft
+        name: Loft
+        icon: mdi:speaker
+      - entity: media_player.ron_s_office
+        name: Ron's Office
+        icon: mdi:speaker
+      - entity: media_player.bedroom
+        name: Kitchen
+        icon: mdi:speaker
+
+  # ── TVs — display devices (glance for compact overview)
+  - type: glance
+    title: TVs
+    show_name: true
+    show_state: true
+    show_icon: true
+    columns: 3
+    entities:
+      - entity: media_player.lg_webos_tv_oled65c4pua_3
+        name: Living Room
+        icon: mdi:television
+      - entity: media_player.loft_tv_television
+        name: Loft
+        icon: mdi:television
+      - entity: media_player.ron_pl_tv
+        name: Ron's
+        icon: mdi:television
+
+  # ── Room detail — entities cards, no media-control (dark surface preserved)
+  - type: entities
+    title: Living Room
+    entities:
+      - entity: media_player.living_room_speakers
+        name: Sonos
+        icon: mdi:speaker
+      - entity: media_player.lg_webos_tv_oled65c4pua_3
+        name: LG TV
+        icon: mdi:television
+
+  - type: entities
+    title: Loft
+    entities:
+      - entity: media_player.loft
+        name: Sonos
+        icon: mdi:speaker
+      - entity: media_player.loft_tv_television
+        name: Loft TV
+        icon: mdi:television
