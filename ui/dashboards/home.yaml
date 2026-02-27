@@ -1,9 +1,10 @@
 # ui/dashboards/home.yaml
-# Home Command — Home view  
-# Step 5 redesign. Native tile cards + history-graph + logbook.
+# Home Command — Home view
+# Step 4B canonical. Captured live from HA Raw Editor 2026-02-27.
 # Section order: Status Tiles > Ambient Graph > Lights > Now Playing > Automation Log > Alerts
-# Last updated: 2026-02-27 (Step 5 redesign — tile grid + lux sparkline + history log)
-# Design: grayscale-first, tile cards for status, history-graph for lux, logbook for audit
+# Last updated: 2026-02-27 (Step 4B GitOps capture + normalize pass)
+# Source: Home Assistant storage mode dashboard, Home Command dashboard
+# Design: grayscale-first. Tile cards for status. History-graph for lux. No media-control cards.
 
 title: Home
 path: home
