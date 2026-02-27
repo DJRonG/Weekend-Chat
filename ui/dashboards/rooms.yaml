@@ -1,7 +1,7 @@
 # ui/dashboards/rooms.yaml
 # Home Command — Rooms view
 # Step 4B canonical. Per-room entities cards, consistent format.
-# Last updated: 2026-02-27 (Step 4 polish pass)
+# Last updated: 2026-02-27 (Step 4B normalize pass)
 # Source: Home Assistant storage mode dashboard, Home Command dashboard
 
 title: Rooms
@@ -9,11 +9,26 @@ path: rooms
 icon: mdi:floor-plan
 cards:
 
-  # ── Kitchen ── lights + scenes stacked
+  # ── Kitchen ── status tile + lights + scenes stacked
   - type: vertical-stack
     cards:
+      # Kitchen status: occupancy, lux, automation toggle
       - type: entities
-        title: Kitchen
+        title: Kitchen Status
+        entities:
+          - entity: binary_sensor.smart_presence_sensor_occupancy
+            name: Occupied
+            icon: mdi:motion-sensor
+          - entity: sensor.smart_presence_sensor_illuminance
+            name: Lux
+            icon: mdi:brightness-5
+          - entity: input_boolean.kitchen_lighting_automation_enabled
+            name: Auto Lighting
+            icon: mdi:lightning-bolt
+      # Kitchen lights
+      - type: entities
+        title: Kitchen Lights
+        show_header_toggle: true
         entities:
           - entity: switch.kitchen_lights_led
             name: LED Strip
@@ -24,12 +39,7 @@ cards:
           - entity: switch.breakfast_nook_lights
             name: Nook
             icon: mdi:lamp
-          - entity: binary_sensor.smart_presence_sensor_occupancy
-            name: Occupied
-            icon: mdi:motion-sensor
-          - entity: sensor.smart_presence_sensor_illuminance
-            name: Lux
-            icon: mdi:brightness-5
+      # Kitchen scenes
       - type: entities
         title: Scenes
         entities:
@@ -43,7 +53,7 @@ cards:
             name: Evening
             icon: mdi:weather-sunset
 
-  # ── Living Room
+  # ── Living Room ──
   - type: entities
     title: Living Room
     entities:
@@ -54,7 +64,7 @@ cards:
         name: LG TV
         icon: mdi:television
 
-  # ── Loft
+  # ── Loft ──
   - type: entities
     title: Loft
     entities:
@@ -64,16 +74,22 @@ cards:
       - entity: media_player.loft_tv_television
         name: TV
         icon: mdi:television
+      - entity: switch.loft_fan
+        name: Fan
+        icon: mdi:fan
 
-  # ── Ron's Office
+  # ── Ron's Office ──
   - type: entities
     title: Ron's Office
     entities:
       - entity: media_player.ron_s_office
         name: Sonos
         icon: mdi:speaker
+      - entity: switch.ron_s_office_lights
+        name: Lights
+        icon: mdi:lightbulb
 
-  # ── Laundry
+  # ── Laundry ──
   - type: entities
     title: Laundry
     entities:
@@ -84,7 +100,7 @@ cards:
         name: Dryer
         icon: mdi:tumble-dryer
 
-  # ── Entryway
+  # ── Entryway ──
   - type: entities
     title: Entryway
     entities:
