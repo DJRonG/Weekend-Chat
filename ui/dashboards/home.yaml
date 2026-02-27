@@ -1,0 +1,98 @@
+# ui/dashboards/home.yaml
+# Home Command — Home view
+# Step 4B canonical. Section order: Status > Env > Lights > Now Playing > Alerts
+# Last updated: 2026-02-27 (Step 4 polish pass)
+# Source: Home Assistant storage mode dashboard, Home Command dashboard
+
+title: Home
+path: home
+icon: mdi:home
+type: sidebar
+cards:
+
+  # ── Status ── person + phone + watch compact glance
+  - type: glance
+    show_name: true
+    show_icon: true
+    show_state: true
+    columns: 2
+    entities:
+      - entity: person.ron
+        name: Ron
+        icon: mdi:account
+      - entity: sensor.cph2655_detected_activity
+        name: Activity
+        icon: mdi:run
+      - entity: sensor.cph2655_battery_level
+        name: Phone
+        icon: mdi:battery
+      - entity: device_tracker.oneplus_watch_2r_0002
+        name: Watch
+        icon: mdi:watch
+
+  # ── Env ── ambient sensors compact row
+  - type: glance
+    show_name: true
+    show_icon: true
+    show_state: true
+    columns: 3
+    entities:
+      - entity: sensor.smart_presence_sensor_illuminance
+        icon: mdi:brightness-5
+        name: Lux
+      - entity: sensor.cph2655_battery_level
+        icon: mdi:battery
+        name: Phone %
+      - entity: sensor.cph2655_detected_activity
+        icon: mdi:run
+        name: Activity
+
+  # ── Lights ── main floor quick controls
+  - type: entities
+    title: Lights
+    show_header_toggle: true
+    entities:
+      - entity: switch.kitchen_lights_led
+        name: Kitchen
+        icon: mdi:led-strip-variant
+      - entity: switch.breakfast_nook_ceiling_lights
+        name: Nook Ceiling
+        icon: mdi:ceiling-light
+      - entity: switch.breakfast_nook_lights
+        name: Nook
+        icon: mdi:lamp
+      - entity: switch.outside_lights
+        name: Outside
+        icon: mdi:outdoor-lamp
+
+  # ── Now Playing ── living room quick view (entities, no media-control)
+  - type: entities
+    title: Now Playing
+    entities:
+      - entity: media_player.living_room_speakers
+        name: Sonos
+        icon: mdi:speaker
+      - entity: media_player.lg_webos_tv_oled65c4pua_3
+        name: LG TV
+        icon: mdi:television
+
+  # ── Alerts ── conditional: only render when active
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.washer_power
+        state: 'on'
+    card:
+      type: entity
+      entity: binary_sensor.washer_power
+      name: Washer Running
+      icon: mdi:washing-machine
+
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.dryer_power
+        state: 'on'
+    card:
+      type: entity
+      entity: binary_sensor.dryer_power
+      name: Dryer Running
+      icon: mdi:tumble-dryer
