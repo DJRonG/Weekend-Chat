@@ -1,0 +1,108 @@
+# ui/dashboards/watch.yaml
+# Home Command — Watch view
+# Step 4C polished. Section order: At a Glance > Modes > Alerts > Shortcuts > Phone Status > Sleep & Focus
+# Last updated: 2026-02-27 (Step 4 polish pass)
+# Source: Home Assistant storage mode dashboard, Home Command dashboard
+#
+# Watch entity notes:
+#   device_tracker.oneplus_watch_2r_0002 — GPS location tracker only ("Watch Tracker")
+#   No watch battery sensor available yet. See MAPPING_NEEDED comments below.
+#
+# To add when available:
+#   MAPPING_NEEDED: sensor.oneplus_watch_battery_level  (watch battery %)
+#   MAPPING_NEEDED: binary_sensor.oneplus_watch_charging (watch charging state)
+#   MAPPING_NEEDED: input_boolean.sleep_focus            (sleep focus toggle)
+
+title: Watch
+path: watch
+icon: mdi:watch
+panel: false
+cards:
+
+  # ── At a Glance ── compact overview: person + activity + phone + watch
+  - type: glance
+    title: At a Glance
+    show_name: true
+    show_state: true
+    show_icon: true
+    columns: 2
+    entities:
+      - entity: person.ron
+        name: Ron
+        icon: mdi:account
+      - entity: sensor.cph2655_detected_activity
+        name: Activity
+        icon: mdi:run
+      - entity: sensor.cph2655_battery_level
+        name: Phone
+        icon: mdi:battery
+      - entity: device_tracker.oneplus_watch_2r_0002
+        name: Watch Tracker
+        icon: mdi:watch-export-variant
+
+  # ── Modes ── on/off toggles for watch automations
+  - type: entities
+    title: Modes
+    entities:
+      - entity: automation.watch_morning_briefing_v1
+        name: Morning Mode
+        icon: mdi:weather-sunny
+      - entity: automation.watch_bedtime_mode_v1
+        name: Bedtime Mode
+        icon: mdi:weather-night
+      - entity: automation.watch_workout_mode_v1
+        name: Workout Mode
+        icon: mdi:run
+
+  # ── Alerts ── battery and threshold automations
+  - type: entities
+    title: Alerts
+    entities:
+      - entity: automation.watch_phone_low_battery_v1
+        name: Low Battery Alert
+        icon: mdi:battery-low
+      # MAPPING_NEEDED: watch battery level alert
+      # - entity: sensor.oneplus_watch_battery_level
+      #   name: Watch Battery
+      #   icon: mdi:battery-watch
+      # MAPPING_NEEDED: watch charging status
+      # - entity: binary_sensor.oneplus_watch_charging
+      #   name: Watch Charging
+      #   icon: mdi:battery-charging
+
+  # ── Shortcuts ── bulk / fast-action automations
+  - type: entities
+    title: Shortcuts
+    entities:
+      - entity: automation.watch_all_off_shortcut_v1
+        name: All Off
+        icon: mdi:power
+
+  # ── Phone Status ── live phone sensor data
+  - type: entities
+    title: Phone Status
+    entities:
+      - entity: sensor.cph2655_battery_level
+        name: Phone Battery
+        icon: mdi:battery
+      - entity: sensor.cph2655_battery_state
+        name: Charging State
+        icon: mdi:battery-charging
+      - entity: sensor.cph2655_charger_type
+        name: Charger Type
+        icon: mdi:power-plug
+
+  # ── Sleep and Focus ── sleep score input + watch location tracker
+  - type: entities
+    title: Sleep and Focus
+    entities:
+      - entity: input_number.sleep_score
+        name: Sleep Score
+        icon: mdi:sleep
+      - entity: device_tracker.oneplus_watch_2r_0002
+        name: Watch Tracker
+        icon: mdi:watch-export-variant
+      # MAPPING_NEEDED: sleep focus toggle
+      # - entity: input_boolean.sleep_focus
+      #   name: Sleep Focus
+      #   icon: mdi:do-not-disturb
