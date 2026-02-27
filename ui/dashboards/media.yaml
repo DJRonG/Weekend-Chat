@@ -2,11 +2,11 @@
 # Home Command — Media view
 # Step 4B canonical. Section order: Music Asst > Cast Devices > TVs > Room Detail
 # No media-control cards (removed cyan background). Entities cards only.
-# Last updated: 2026-02-27 (Step 4 polish pass)
+# Last updated: 2026-02-27 (Step 4B normalize pass)
 # Source: Home Assistant storage mode dashboard, Home Command dashboard
 #
 # Entity notes:
-#   media_player.bedroom        = Kitchen Sonos speaker (entity alias)
+#   media_player.bedroom      = Kitchen Sonos speaker (entity alias)
 #   media_player.loft_tv_television = confirmed Loft TV entity
 
 title: Media
@@ -14,11 +14,13 @@ path: media
 icon: mdi:music
 cards:
 
-  # ── Music Assistant update status
-  - type: entity
+  # ── Music Assistant update status (tile — native, no custom card)
+  - type: tile
     entity: update.music_assistant_update
     name: Music Assistant
     icon: mdi:music-circle
+    tap_action:
+      action: more-info
 
   # ── Cast Devices — all Sonos speakers (glance for compact overview)
   - type: glance
@@ -79,3 +81,10 @@ cards:
       - entity: media_player.loft_tv_television
         name: Loft TV
         icon: mdi:television
+
+  - type: entities
+    title: Ron's Office
+    entities:
+      - entity: media_player.ron_s_office
+        name: Sonos
+        icon: mdi:speaker
