@@ -1,8 +1,9 @@
 # ui/dashboards/home.yaml
-# Home Command — Home view
-# Step 4B canonical. Section order: Status > Env > Lights > Now Playing > Alerts
-# Last updated: 2026-02-27 (Step 4 polish pass)
-# Source: Home Assistant storage mode dashboard, Home Command dashboard
+# Home Command — Home view  
+# Step 5 redesign. Native tile cards + history-graph + logbook.
+# Section order: Status Tiles > Ambient Graph > Lights > Now Playing > Automation Log > Alerts
+# Last updated: 2026-02-27 (Step 5 redesign — tile grid + lux sparkline + history log)
+# Design: grayscale-first, tile cards for status, history-graph for lux, logbook for audit
 
 title: Home
 path: home
@@ -10,44 +11,44 @@ icon: mdi:home
 type: sidebar
 cards:
 
-  # ── Status ── person + phone + watch compact glance
-  - type: glance
-    show_name: true
-    show_icon: true
-    show_state: true
-    columns: 2
-    entities:
-      - entity: person.ron
+  # ── Status Grid ── 4 tiles: person, activity, phone, watch
+  - type: horizontal-stack
+    cards:
+      - type: tile
+        entity: person.ron
         name: Ron
+        show_entity_picture: false
         icon: mdi:account
-      - entity: sensor.cph2655_detected_activity
+        tap_action:
+          action: none
+      - type: tile
+        entity: sensor.cph2655_detected_activity
         name: Activity
         icon: mdi:run
-      - entity: sensor.cph2655_battery_level
+        tap_action:
+          action: none
+      - type: tile
+        entity: sensor.cph2655_battery_level
         name: Phone
         icon: mdi:battery
-      - entity: device_tracker.oneplus_watch_2r_0002
+        tap_action:
+          action: none
+      - type: tile
+        entity: device_tracker.oneplus_watch_2r_0002
         name: Watch
-        icon: mdi:watch
+        icon: mdi:watch-export-variant
+        tap_action:
+          action: none
 
-  # ── Env ── ambient sensors compact row
-  - type: glance
-    show_name: true
-    show_icon: true
-    show_state: true
-    columns: 3
+  # ── Ambient Light ── lux history sparkline (native history-graph, 6h)
+  - type: history-graph
+    title: Ambient Light (lux)
+    hours_to_show: 6
     entities:
       - entity: sensor.smart_presence_sensor_illuminance
-        icon: mdi:brightness-5
         name: Lux
-      - entity: sensor.cph2655_battery_level
-        icon: mdi:battery
-        name: Phone %
-      - entity: sensor.cph2655_detected_activity
-        icon: mdi:run
-        name: Activity
 
-  # ── Lights ── main floor quick controls
+  # ── Lights ── toggle list with master toggle
   - type: entities
     title: Lights
     show_header_toggle: true
@@ -64,8 +65,11 @@ cards:
       - entity: switch.outside_lights
         name: Outside
         icon: mdi:outdoor-lamp
+      - entity: switch.loft_fan
+        name: Loft Fan
+        icon: mdi:fan
 
-  # ── Now Playing ── living room quick view (entities, no media-control)
+  # ── Now Playing ── living room media (entities only, no media-control)
   - type: entities
     title: Now Playing
     entities:
@@ -76,23 +80,36 @@ cards:
         name: LG TV
         icon: mdi:television
 
-  # ── Alerts ── conditional: only render when active
+  # ── Automation Log ── 24h history of kitchen brightness automations
+  # This is the persistent reference log for brightness/lux trigger events
+  - type: logbook
+    title: Automation Log
+    hours_to_show: 24
+    entities:
+      - automation.kitchen_lighting_auto_on_v1
+      - automation.kitchen_lighting_auto_off_v1
+      - automation.kitchen_lighting_evening_winddown_v1
+      - sensor.smart_presence_sensor_illuminance
+
+  # ── Alerts ── conditional: only show when washer/dryer active
   - type: conditional
     conditions:
       - entity: binary_sensor.washer_power
         state: 'on'
     card:
-      type: entity
+      type: tile
       entity: binary_sensor.washer_power
       name: Washer Running
       icon: mdi:washing-machine
+      color: amber
 
   - type: conditional
     conditions:
       - entity: binary_sensor.dryer_power
         state: 'on'
     card:
-      type: entity
+      type: tile
       entity: binary_sensor.dryer_power
       name: Dryer Running
       icon: mdi:tumble-dryer
+      color: amber
