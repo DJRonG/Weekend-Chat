@@ -1,14 +1,16 @@
 # ui/dashboards/watch.yaml
 # Home Command — Watch view
-# Step 4C polished. Section order: At a Glance > Modes > Alerts > Shortcuts > Phone Status > Sleep & Focus
-# Last updated: 2026-02-27 (Step 4 polish pass)
+# Step 4B/4C canonical. Captured live from HA Raw Editor 2026-02-27.
+# Section order: At a Glance > Modes > Alerts > Shortcuts > Phone Status > Sleep & Focus
+# Last updated: 2026-02-27 (Step 4B GitOps capture + Step 4C Watch polish)
 # Source: Home Assistant storage mode dashboard, Home Command dashboard
 #
 # Watch entity notes:
 #   device_tracker.oneplus_watch_2r_0002 — GPS location tracker only ("Watch Tracker")
-#   No watch battery sensor available yet. See MAPPING_NEEDED comments below.
+#   No dedicated watch battery sensor available yet. See MAPPING_NEEDED comments below.
+#   "Watch Connected" label replaced with "Watch Tracker" (4C polish).
 #
-# To add when available:
+# To add when entities become available:
 #   MAPPING_NEEDED: sensor.oneplus_watch_battery_level  (watch battery %)
 #   MAPPING_NEEDED: binary_sensor.oneplus_watch_charging (watch charging state)
 #   MAPPING_NEEDED: input_boolean.sleep_focus            (sleep focus toggle)
@@ -19,7 +21,7 @@ icon: mdi:watch
 panel: false
 cards:
 
-  # ── At a Glance ── compact overview: person + activity + phone + watch
+  # ── At a Glance ── compact overview: person + activity + phone + watch tracker
   - type: glance
     title: At a Glance
     show_name: true
@@ -39,6 +41,10 @@ cards:
       - entity: device_tracker.oneplus_watch_2r_0002
         name: Watch Tracker
         icon: mdi:watch-export-variant
+      # MAPPING_NEEDED: watch battery tile
+      # - entity: sensor.oneplus_watch_battery_level
+      #   name: Watch Battery
+      #   icon: mdi:battery-watch
 
   # ── Modes ── on/off toggles for watch automations
   - type: entities
