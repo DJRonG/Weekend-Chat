@@ -684,3 +684,76 @@ Weekend Agent uses a sophisticated mobility scoring algorithm that balances mult
 ## License
 
 Built with Mocha ☕
+
+---
+
+## Home Model (Source of Truth)
+
+The diagram below shows the full architecture of the Weekend Agent — from raw sensor inputs through the orchestration layer to the state store and output surfaces. The canonical source lives in [`docs/diagrams/home-model.mmd`](docs/diagrams/home-model.mmd).
+
+```mermaid
+graph TD
+    %% ── Inputs ──────────────────────────────────────────────────────────
+    subgraph Inputs["🏠 Home Inputs"]
+        HA[Home Assistant / HA REST API]
+        Biometric[Biometric & Presence / BLE + Motion Sensors]
+        Calendar[Calendar & Tasks / Google Calendar API]
+        Weather[Weather Feed / OpenWeatherMap]
+        Conversation[Conversation Notes / Weekly Chat Logs]
+    end
+
+    %% ── Orchestration Layer ──────────────────────────────────────────────
+    subgraph Orchestrator["🤖 Weekend Agent Orchestrator - Claude"]
+        ContextEngine[Context Engine - builds world-state snapshot]
+        MobilityEngine[Mobility Engine - walk / drive / rideshare score]
+        AgendaEngine[Weekend Agenda Builder]
+        EmotionEngine[Emotional Context Parser]
+    end
+
+    %% ── State Store ──────────────────────────────────────────────────────
+    subgraph State["💾 State Store - Supabase / Postgres"]
+        HomeStatus[home_status table]
+        ConvNotes[conversation_notes table]
+        Events[events table]
+        Destinations[destinations table]
+    end
+
+    %% ── Outputs ──────────────────────────────────────────────────────────
+    subgraph Outputs["📲 Outputs"]
+        Dashboard[Home Dashboard / React + Vercel]
+        Notification[Push Notifications / HA + Mobile]
+        APIEndpoint[REST API - /recommend /status /agenda]
+    end
+
+    HA           --> ContextEngine
+    Biometric    --> ContextEngine
+    Calendar     --> ContextEngine
+    Weather      --> ContextEngine
+    Conversation --> EmotionEngine
+
+    ContextEngine --> MobilityEngine
+    ContextEngine --> AgendaEngine
+    EmotionEngine --> AgendaEngine
+
+    MobilityEngine --> HomeStatus
+    AgendaEngine   --> HomeStatus
+    ContextEngine  --> ConvNotes
+    Calendar       --> Events
+    Destinations   --> MobilityEngine
+
+    HomeStatus  --> Dashboard
+    HomeStatus  --> APIEndpoint
+    ConvNotes   --> Dashboard
+    Events      --> Dashboard
+    APIEndpoint --> Notification
+
+    classDef input      fill:#1e3a5f,stroke:#4a90d9,color:#e0eeff
+    classDef engine     fill:#2d1b4e,stroke:#9b59b6,color:#f0e6ff
+    classDef store      fill:#1a3c2e,stroke:#27ae60,color:#e0ffe8
+    classDef output     fill:#3b2200,stroke:#e67e22,color:#fff0e0
+
+    class HA,Biometric,Calendar,Weather,Conversation input
+    class ContextEngine,MobilityEngine,AgendaEngine,EmotionEngine engine
+    class HomeStatus,ConvNotes,Events,Destinations store
+    class Dashboard,Notification,APIEndpoint output
+```
